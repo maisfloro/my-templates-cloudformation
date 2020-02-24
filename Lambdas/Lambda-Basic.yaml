@@ -1,0 +1,51 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Template for basic Lambda Function 
+# ----------- PARAMETERS -----------
+Parameters:
+# Define within parameters lambda's name. 
+  FunctionName:
+    Type: String
+    Default: ChangeNameLambda
+# ----------- RESOURCES -----------
+Resources:
+  # 1 Role with specific permissions for write on cloudwatch logs. This role only allow access from lambda.amazonaws.com.
+  RoleforMyLambda:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      # I have only one policy, but you can add more policies. I think that the PolicyName is very important for identify restricted permissions. You recall define strictly your resources.
+      Policies:
+        - PolicyName: policy-logs-restricted-permissions
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                  - logs:CreateLogGroup
+                Resource:
+                  - '*'
+  # I defined a simple lambda. 
+  LambdaFunctionFirehoseTest:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Ref FunctionName
+      # You recall get ARN of previous resource's role.
+      Role: !GetAtt RoleforMyLambda.Arn
+      Handler: lambda_function.lambda_handler
+      Runtime: python3.7
+      MemorySize: 128
+      Timeout: 20
+      #This resource has your code within s3 (ZIP format).
+      CodeUri: "s3://MYNAMEBUCKET/resources/code_my_lambda.zip"
+Transform: "AWS::Serverless-2016-10-31"
