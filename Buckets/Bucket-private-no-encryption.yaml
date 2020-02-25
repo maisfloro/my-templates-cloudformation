@@ -20,4 +20,4 @@ Outputs:
   NewBucketS3:
     Value: !GetAtt NewBucketS3.Arn
     Export:
-      Name: NewBucketS3
+      Name: !Ref NewBucketS3

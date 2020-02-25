@@ -2,6 +2,7 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: Deploy Role 
 # This template create one rol with access from codebuild and codepipeline service.
 # Resources
+Resources:
   RoleDeploy:
     Type: AWS::IAM::Role
     Properties:
@@ -54,4 +55,4 @@ Outputs:
   RoleDeploy:
     Value: !GetAtt RoleDeploy.Arn
     Export:
-      Name: RoleDeploy
+      Name: !Ref RoleDeploy
