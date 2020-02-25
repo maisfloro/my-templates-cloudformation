@@ -111,5 +111,5 @@ Resources:
             Value: !ImportValue BucketArtifacts
       Source:
         Type: CODEPIPELINE
-        BuildSpec: !Ref BuildspecDEV 
+        BuildSpec: !Ref Buildspec 
       TimeoutInMinutes: 10
