@@ -1,0 +1,57 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Deploy Role 
+# This template create one rol with access from codebuild and codepipeline service.
+# Resources
+  RoleDeploy:
+    Type: AWS::IAM::Role
+    Properties:
+      Path:
+      AssumeRolePolicyDocument: 
+      Policies:
+        - PolicyName: policy-deploy-codebuild
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Principal:
+                  Service:
+                    - codebuild.amazonaws.com
+                    - codepipeline.amazonaws.com
+                  Action:
+                    - sts:AssumeRole
+              - Effect: "Allow"
+                Action: 
+                  - ecr:*
+                Resource: 
+                  - "*"
+              - Effect: "Allow"
+                Action: 
+                  - ec2:*
+                Resource: 
+                  - "*"
+              - Effect: "Allow"
+                Action: 
+                  - cloudformation:*
+                Resource: 
+                  - "*"
+              - Effect: "Allow"
+                Action: 
+                  - s3:*
+                Resource: 
+                  - "*"
+              - Effect: "Allow"
+                Action: 
+                  - ecs:*
+                Resource: 
+                  - "*"
+              - Effect: "Allow"
+                Action: 
+                  - codebuild:*
+                Resource: 
+                  - "*"
+#outputs
+Outputs:
+  RoleDeploy:
+    Value: !GetAtt RoleDeploy.Arn
+    Export:
+      Name: RoleDeploy

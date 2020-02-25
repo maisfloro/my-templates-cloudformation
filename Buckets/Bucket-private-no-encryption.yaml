@@ -1,0 +1,23 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Create bucket private bucket with versioning.
+# This template create one private bucket
+# Parameters
+Parameters:
+    NewBucket:
+        Description: Define name new bucket
+        Type: String
+# Resources
+Resources:
+  NewBucketS3:
+      Type: AWS::S3::Bucket
+      Properties: 
+        AccessControl: Private
+        BucketName: !Ref NewBucketS3
+        VersioningConfiguration:
+          Status: Enabled
+#outputs
+Outputs:
+  NewBucketS3:
+    Value: !GetAtt NewBucketS3.Arn
+    Export:
+      Name: NewBucketS3

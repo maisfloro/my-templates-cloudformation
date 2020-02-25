@@ -1,0 +1,115 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Deploy repo from github to S3
+# ----------- PARAMETERS -----------
+Parameters:
+  GithubProjectName:
+    Description: Github Project Name
+    Type: String
+    Default: CHANGE-PROJECT-NAME
+  RepositoryName:
+    Description: Repo Name
+    Type: String
+    Default: CHANGE-REPO-NAME
+  RepositoryBranch:
+    Description: Branch repository
+    Type: String
+    Default: CHANGE-BRANCH-REPO
+  Buildspec:
+    Description: Buildspec repository
+    Type: String
+    Default: CHANGE-PATH-BUILDSPEC
+  Mys3BucketName:
+    Description: Name bucket
+    Type: String
+    Default: CHANGE-NAME-S3-BUCKET
+# ----------- RESOURCES ------------
+Resources:
+  # Deploy's Role (If you have one role, never mind this resource)
+  RoleCodeBuild:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - codebuild.amazonaws.com
+                - codepipeline.amazonaws.com
+              AWS: 
+                - arn:aws:iam::CHANGEIDYOURACCOUNT:root
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: codebuild-policy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                  - s3:*
+                Resource: "*"
+  # Create bucket s3 for upload code deployed (If you have one bucket, never mind this resource)
+  # This bucket is private, is versioning and not have encryption. For encryption configuration visit user guide: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-s3-bucket.html
+  Mys3Bucket:
+    Type: AWS::S3::Bucket
+    Properties: 
+      AccessControl: Private
+      BucketName: !Ref Mys3BucketName
+      VersioningConfiguration:
+        Status: Enabled
+  # Create bucket policy base for Mys3Bucket
+  Mys3BucketPolicy: 
+    Type: AWS::S3::BucketPolicy
+    Properties: 
+      Bucket: !Ref Mys3Bucket
+      PolicyDocument: 
+        Statement: 
+          - 
+            Action: 
+              - s3:List*
+              - s3:Get* 
+              - s3:Put*
+            Effect: "Allow"
+            Resource:
+              - Fn::Join: 
+                  - ""
+                  - - !GetAtt Mys3Bucket.Arn
+              - Fn::Join: 
+                  - ""
+                  - - !GetAtt Mys3Bucket.Arn
+                    - "/*"
+            Principal:
+              AWS:
+                # Allow access to rol created previously.
+                - !Ref RoleCodeBuild
+  
+  CodeBuildtoMys3Bucket:
+    Type: AWS::CodeBuild::Project
+    DeletionPolicy: Delete
+    Properties:
+      Name: !Sub ${AWS::StackName}-build
+      Description: !Sub ${AWS::StackName} Builder
+      ServiceRole: !Ref RoleCodeBuild
+      Cache:
+        Type: S3
+        # You have one Bucket for Artifacts.
+        Location: !ImportValue BucketArtifacts
+      Artifacts:
+        Type: CODEPIPELINE
+        Name: !Sub ${AWS::StackName}
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_MEDIUM
+        Image: aws/codebuild/python:3.7.1
+        EnvironmentVariables:
+          - Name: S3_BUCKET
+            Value: !ImportValue BucketArtifacts
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: !Ref BuildspecDEV 
+      TimeoutInMinutes: 10
