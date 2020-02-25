@@ -36,7 +36,7 @@ Resources:
                 Resource:
                   - '*'
   # I defined a simple lambda. 
-  LambdaFunctionFirehoseTest:
+  LambdaFunction:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Ref FunctionName
