@@ -1,0 +1,31 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Create ECR Repository
+# Parameters
+Parameters:
+    NewECR:
+        Description: Define name new ECR Repository
+        Type: String
+# Resources
+Resources:
+  RepositoryECR:
+    Type: AWS::ECR::RepositoryECR
+    Properties:
+      RepositoryName: !Ref NewECR
+      RepositoryPolicyText:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: ReadOnlyAccess
+            Effect: Allow
+            Principal:
+              AWS:
+                - DEFINE_HERE_YOUR_ROL_OR_USER_ACCESS
+            Action:
+              - "ecr:GetDownloadUrlForLayer"
+              - "ecr:BatchGetImage"
+              - "ecr:BatchCheckLayerAvailability"
+#outputs
+Outputs:
+  RepositoryECR:
+    Value: !GetAtt RepositoryECR.Arn
+    Export:
+      Name: !Ref RepositoryECR
