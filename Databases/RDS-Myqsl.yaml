@@ -1,1 +1,90 @@
-
+AWSTemplateFormatVersion: 2010-09-09
+Description: Creates a RDS Mysql.
+#----------- PARAMETERS -----------
+Parameters:
+    NameSubnet:
+        Description: Define name RDS Subnet
+        Type: String
+    NameSecurityGroup:
+        Description: Define name RDS Security Group
+        Type: String
+    NameRDSMysql:
+        Description: Define name RDS Mysql
+        Type: String
+    UserMasterRDSMysql:
+        Description: Define User RDS Mysql
+        Type: String
+Resources:
+# ---------- Subnet RDS ----------
+  RDSSubnet:
+    Type: 'AWS::RDS::DBSubnetGroup'
+    Properties:
+      DBSubnetGroupDescription: "Subnet RDS"
+      DBSubnetGroupName: !Ref NameSubnet
+      SubnetIds:
+        -  "CHANGESUBNET"
+      Tags:
+        - Key: Product
+          Value: CHANGEPRODUCT
+        - Key: Environment
+          Value: CHANGEENVIRONMENT
+# ---------- Security Group for RDS ----------
+  RDSSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group Allow Backend
+      GroupName: !Ref NameSecurityGroup
+      VpcId: "CHANGE VPC"
+      SecurityGroupIngress:
+      -   IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
+          SourceSecurityGroupId: !ImportValue RDSSubnet
+      Tags:
+      - Key: Product
+        Value: CHANGEPRODUCT
+      - Key: Environment
+        Value: CHANGEENVIRONMENT
+# ---------- Database on RDS PostgreSQL ----------
+  RDSMysql:
+    Type: 'AWS::RDS::DBInstance'
+    DeletionPolicy: Snapshot
+    Properties:
+      DBName: !Ref NameRDSMysql
+      DBInstanceIdentifier: !Ref NameRDSMysql
+      VPCSecurityGroups:
+        - !GetAtt RDSSecurityGroup.GroupId
+      DBSubnetGroupName: !Ref RDSSubnet
+      PubliclyAccessible: no
+      DBInstanceClass: db.t2.micro
+      Engine: MySQL
+      EngineVersion: "5.7.22"
+      DeletionProtection: True
+      MasterUsername: !Ref UserMasterRDSMysql
+      MasterUserPassword: "{{resolve:ssm-secure:/Path/Password:1}}"
+      Port: 3306
+      StorageType:  gp2
+      AllocatedStorage: 20
+      BackupRetentionPeriod: 15
+      Tags:
+      - Key: Product
+        Value: CHANGEPRODUCT
+      - Key: Environment
+        Value: CHANGEENVIRONMENT
+# ---------- Outputs template ----------
+Outputs:
+  RDSSubnet:
+    Description: RDSSubnet
+    Value: !Ref RDSSubnet
+    Export:
+      Name: RDSSubnet
+  RDSSecurityGroup:
+    Description: RDSSecurityGroup
+    Value: !Ref RDSSecurityGroup
+    Export:
+      Name: RDSSecurityGroup
+  RDSMysql:
+    Description: RDSMysql
+    Value: !Ref RDSMysql
+    Export:
+      Name: RDSMysql
